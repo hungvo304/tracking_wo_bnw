@@ -30,12 +30,15 @@ class FRCNN_FPN(FasterRCNN):
         device = list(self.parameters())[0].device
         boxes = boxes.to(device)
 
-        boxes = resize_boxes(boxes, self.original_image_sizes[0], self.preprocessed_images.image_sizes[0])
+        boxes = resize_boxes(
+            boxes, self.original_image_sizes[0], self.preprocessed_images.image_sizes[0])
         proposals = [boxes]
 
-        box_features = self.roi_heads.box_roi_pool(self.features, proposals, self.preprocessed_images.image_sizes)
+        box_features = self.roi_heads.box_roi_pool(
+            self.features, proposals, self.preprocessed_images.image_sizes)
         box_features = self.roi_heads.box_head(box_features)
-        class_logits, box_regression = self.roi_heads.box_predictor(box_features)
+        class_logits, box_regression = self.roi_heads.box_predictor(
+            box_features)
 
         pred_boxes = self.roi_heads.box_coder.decode(box_regression, proposals)
         pred_scores = F.softmax(class_logits, -1)
@@ -59,7 +62,8 @@ class FRCNN_FPN(FasterRCNN):
         # return detections['boxes'].detach().cpu(), detections['scores'].detach().cpu()
 
         pred_boxes = pred_boxes[:, 1:].squeeze(dim=1).detach()
-        pred_boxes = resize_boxes(pred_boxes, self.preprocessed_images.image_sizes[0], self.original_image_sizes[0])
+        pred_boxes = resize_boxes(
+            pred_boxes, self.preprocessed_images.image_sizes[0], self.original_image_sizes[0])
         pred_scores = pred_scores[:, 1:].squeeze(dim=1).detach()
         return pred_boxes, pred_scores
 
