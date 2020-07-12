@@ -14,6 +14,17 @@ from ..config import cfg
 from torchvision.transforms import ToTensor
 
 
+class TestSequence(Dataset):
+    def __init__(self):
+        pass
+
+    def __len__(self):
+        pass
+
+    def __getitem__(self, idx):
+        pass
+
+
 class MOT17Sequence(Dataset):
     """Multiple Object Tracking Dataset.
 
@@ -33,10 +44,22 @@ class MOT17Sequence(Dataset):
         self._dets = dets
         self._vis_threshold = vis_threshold
 
+        # ************************************************************************************************************************
+        # MOT17Det: - train: including tracking ground-truth and all frames of multiple sequences
+        #           - test: including only frames from multiple sequences
         self._mot_dir = osp.join(cfg.DATA_DIR, 'MOT17Det')
+
+        # MOT16Labels: - train: including tracking ground-truth and detection results (DMP only) of multiple sequences
+        #              - test: including only detection results of multiple sequences
         self._label_dir = osp.join(cfg.DATA_DIR, 'MOT16Labels')
+
+        # MOT16-det-dpm-raw: raw detections results without NMS (DPM only)
         self._raw_label_dir = osp.join(cfg.DATA_DIR, 'MOT16-det-dpm-raw')
+
+        # MOT17Labels: - train: including tracking ground-truth and detection results (FRCNN, DMP, SDP) of multiple sequences
+        #              - test: including only detection results of multiple sequences
         self._mot17_label_dir = osp.join(cfg.DATA_DIR, 'MOT17Labels')
+        # ************************************************************************************************************************
 
         self._train_folders = os.listdir(os.path.join(self._mot_dir, 'train'))
         self._test_folders = os.listdir(os.path.join(self._mot_dir, 'test'))
@@ -74,11 +97,13 @@ class MOT17Sequence(Dataset):
         seq_name = self._seq_name
         if seq_name in self._train_folders:
             seq_path = osp.join(self._mot_dir, 'train', seq_name)
-            label_path = osp.join(self._label_dir, 'train', 'MOT16-'+seq_name[-2:])
+            label_path = osp.join(self._label_dir, 'train',
+                                  'MOT16-'+seq_name[-2:])
             mot17_label_path = osp.join(self._mot17_label_dir, 'train')
         else:
             seq_path = osp.join(self._mot_dir, 'test', seq_name)
-            label_path = osp.join(self._label_dir, 'test', 'MOT16-'+seq_name[-2:])
+            label_path = osp.join(self._label_dir, 'test',
+                                  'MOT16-'+seq_name[-2:])
             mot17_label_path = osp.join(self._mot17_label_dir, 'test')
         raw_label_path = osp.join(self._raw_label_dir, 'MOT16-'+seq_name[-2:])
 
@@ -121,13 +146,14 @@ class MOT17Sequence(Dataset):
                         # This -1 accounts for the width (width of 1 x1=x2)
                         x2 = x1 + int(row[4]) - 1
                         y2 = y1 + int(row[5]) - 1
-                        bb = np.array([x1,y1,x2,y2], dtype=np.float32)
+                        bb = np.array([x1, y1, x2, y2], dtype=np.float32)
                         boxes[int(row[0])][int(row[1])] = bb
                         visibility[int(row[0])][int(row[1])] = float(row[8])
         else:
             no_gt = True
 
-        det_file = self.get_det_file(label_path, raw_label_path, mot17_label_path)
+        det_file = self.get_det_file(
+            label_path, raw_label_path, mot17_label_path)
 
         if osp.exists(det_file):
             with open(det_file, "r") as inf:
@@ -139,16 +165,16 @@ class MOT17Sequence(Dataset):
                     x2 = x1 + float(row[4]) - 1
                     y2 = y1 + float(row[5]) - 1
                     score = float(row[6])
-                    bb = np.array([x1,y1,x2,y2, score], dtype=np.float32)
+                    bb = np.array([x1, y1, x2, y2, score], dtype=np.float32)
                     dets[int(float(row[0]))].append(bb)
 
-        for i in range(1,seqLength+1):
-            im_path = osp.join(imDir,"{:06d}.jpg".format(i))
+        for i in range(1, seqLength+1):
+            im_path = osp.join(imDir, "{:06d}.jpg".format(i))
 
-            sample = {'gt':boxes[i],
-                      'im_path':im_path,
-                      'vis':visibility[i],
-                      'dets':dets[i],}
+            sample = {'gt': boxes[i],
+                      'im_path': im_path,
+                      'vis': visibility[i],
+                      'dets': dets[i], }
 
             total.append(sample)
 
@@ -205,7 +231,8 @@ class MOT17Sequence(Dataset):
             os.makedirs(output_dir)
 
         if "17" in self._dets:
-            file = osp.join(output_dir, 'MOT17-'+self._seq_name[6:8]+"-"+self._dets[:-2]+'.txt')
+            file = osp.join(output_dir, 'MOT17-' +
+                            self._seq_name[6:8]+"-"+self._dets[:-2]+'.txt')
         else:
             file = osp.join(output_dir, 'MOT16-'+self._seq_name[6:8]+'.txt')
 
@@ -217,7 +244,8 @@ class MOT17Sequence(Dataset):
                     y1 = bb[1]
                     x2 = bb[2]
                     y2 = bb[3]
-                    writer.writerow([frame+1, i+1, x1+1, y1+1, x2-x1+1, y2-y1+1, -1, -1, -1, -1])
+                    writer.writerow([frame+1, i+1, x1+1, y1+1,
+                                     x2-x1+1, y2-y1+1, -1, -1, -1, -1])
 
 
 class MOT19Sequence(MOT17Sequence):
@@ -258,7 +286,8 @@ class MOT19Sequence(MOT17Sequence):
     def get_det_file(self, label_path, raw_label_path, mot17_label_path):
         # FRCNN detections
         if "MOT19" in self._seq_name:
-            det_file = osp.join(mot17_label_path, self._seq_name, 'det', 'det.txt')
+            det_file = osp.join(
+                mot17_label_path, self._seq_name, 'det', 'det.txt')
         else:
             det_file = ""
         return det_file
@@ -323,7 +352,8 @@ class MOT20Sequence(MOT17Sequence):
     def get_det_file(self, label_path, raw_label_path, mot17_label_path):
         # FRCNN detections
         if "MOT20" in self._seq_name:
-            det_file = osp.join(mot17_label_path, self._seq_name, 'det', 'det.txt')
+            det_file = osp.join(
+                mot17_label_path, self._seq_name, 'det', 'det.txt')
         else:
             det_file = ""
         return det_file
@@ -364,8 +394,10 @@ class MOT17LOWFPSSequence(MOT17Sequence):
         self._dets = dets
         self._vis_threshold = vis_threshold
 
-        self._mot_dir = osp.join(cfg.DATA_DIR, 'MOT17_LOW_FPS', f'MOT17_{split}_FPS')
-        self._mot17_label_dir = osp.join(cfg.DATA_DIR, 'MOT17_LOW_FPS', f'MOT17_{split}_FPS')
+        self._mot_dir = osp.join(
+            cfg.DATA_DIR, 'MOT17_LOW_FPS', f'MOT17_{split}_FPS')
+        self._mot17_label_dir = osp.join(
+            cfg.DATA_DIR, 'MOT17_LOW_FPS', f'MOT17_{split}_FPS')
 
         # TODO: refactor code of both classes to consider 16,17 and 19
         self._label_dir = osp.join(cfg.DATA_DIR, 'MOT16Labels')
