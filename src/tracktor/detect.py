@@ -10,11 +10,27 @@ from frcnn_fpn import FRCNN_FPN
 from PIL import Image
 from natsort import natsorted
 
+COCO_INSTANCE_CATEGORY_NAMES = [
+    '__background__', 'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
+    'train', 'truck', 'boat', 'traffic light', 'fire hydrant', 'N/A', 'stop sign',
+    'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow',
+    'elephant', 'bear', 'zebra', 'giraffe', 'N/A', 'backpack', 'umbrella', 'N/A', 'N/A',
+    'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball',
+    'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard', 'tennis racket',
+    'bottle', 'N/A', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl',
+    'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza',
+    'donut', 'cake', 'chair', 'couch', 'potted plant', 'bed', 'N/A', 'dining table',
+    'N/A', 'N/A', 'toilet', 'N/A', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell phone',
+    'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'N/A', 'book',
+    'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush'
+]
 
 def main():
-    obj_detect = FRCNN_FPN(num_classes=2)
+    obj_detect = FRCNN_FPN(num_classes=91)
+    # obj_detect.load_state_dict(torch.load(
+    #     '../../output/faster_rcnn_fpn_training_mot_17/model_epoch_27.model'))
     obj_detect.load_state_dict(torch.load(
-        '../../output/faster_rcnn_fpn_training_mot_17/model_epoch_27.model'))
+        '../../output/faster_rcnn_fpn_training_mot_17/coco_model.model'))
     obj_detect.eval()
 
     FRAMES_ROOT = '/mmlabstorage/workingspace/InstaceSearch/hungvq/source/src/uit/mmlab/ins/objecttracking/tracking_wo_bnw/data/9_video_test/test/'
@@ -24,10 +40,10 @@ def main():
     # video_dir = [os.path.join(
     #     FRAMES_ROOT, 'NKKN-VoThiSau 2017-07-18_08_00_00_000')]
     video_dir = [os.path.join(
-        FRAMES_ROOT, 'CongHoa-TruongChinh 2017-07-17_08_00_00_000')]
+        FRAMES_ROOT, 'test_sample')]
     for subdir in video_dir:
 
-        dirname = os.path.basename(subdir)
+        dirname = os.path.basename(subdir) + '_coco'
         frames_root = os.path.join(subdir, 'img1')
 
         save_path = os.path.join(SAVE_ROOT, dirname)
@@ -43,7 +59,7 @@ def main():
             img_list = []
             for frame_path in natsorted(glob.glob(os.path.join(frames_root, '*.jpg'))):
                 frame_name, _ = os.path.splitext(os.path.basename(frame_path))
-                frame_id = int(frame_name) + 1  # adding one temporarily
+                frame_id = int(frame_name)
 
                 img = Image.open(frame_path).convert('RGB')
                 img = T.ToTensor()(img)

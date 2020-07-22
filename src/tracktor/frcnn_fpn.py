@@ -43,6 +43,9 @@ class FRCNN_FPN(FasterRCNN):
         pred_boxes = self.roi_heads.box_coder.decode(box_regression, proposals)
         pred_scores = F.softmax(class_logits, -1)
 
+        # print('pred_scores.shape', pred_scores.shape)
+        # print('pred_scores[0]', pred_scores[0])
+
         # score_thresh = self.roi_heads.score_thresh
         # nms_thresh = self.roi_heads.nms_thresh
 
@@ -61,10 +64,13 @@ class FRCNN_FPN(FasterRCNN):
         # detections = detections[0]
         # return detections['boxes'].detach().cpu(), detections['scores'].detach().cpu()
 
-        pred_boxes = pred_boxes[:, 1:].squeeze(dim=1).detach()
+        # pred_boxes = pred_boxes[:, 1:].squeeze(dim=1).detach()
+        pred_boxes = pred_boxes[:, 3:4].squeeze(dim=1).detach()  # for bicycle
+        # print(pred_boxes.shape)
         pred_boxes = resize_boxes(
             pred_boxes, self.preprocessed_images.image_sizes[0], self.original_image_sizes[0])
-        pred_scores = pred_scores[:, 1:].squeeze(dim=1).detach()
+        # pred_scores = pred_scores[:, 1:].squeeze(dim=1).detach()
+        pred_scores = pred_scores[:, 3:4].squeeze(dim=1).detach()
         return pred_boxes, pred_scores
 
     def load_image(self, images):

@@ -19,7 +19,7 @@ class MOT17Wrapper(Dataset):
         # test_sequences = ['MOT17-01', 'MOT17-03', 'MOT17-06',
         #                   'MOT17-07', 'MOT17-08', 'MOT17-12', 'MOT17-14']
         # test_sequences = ['MOT17-15']
-        test_sequences = ['MOT17-17']
+        test_sequences = ['MOT17-20']
 
         if "train" == split:
             sequences = train_sequences

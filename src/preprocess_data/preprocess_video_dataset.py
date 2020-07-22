@@ -16,7 +16,7 @@ def getTotalFrame(video_path, save_path, is_save=True):
             break
         if is_save:
             cv2.imwrite(
-                os.path.join(save_path, str(cnt).zfill(6) + '.jpg'), frame)
+                os.path.join(save_path, str(cnt+1).zfill(6) + '.jpg'), frame)
         cnt += 1
     return cnt
 
